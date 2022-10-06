@@ -1,6 +1,4 @@
 const fs = require('fs');
-var path = require('path');
-
 const getUserData = () => {
     const jsonData = fs.readFileSync('./users.json');
     return JSON.parse(jsonData);    
@@ -41,12 +39,9 @@ module.exports.deleteSpecificUser =  (req,res)=>{
     const jsonData = fs.readFileSync('./users.json');
     const allUsersData = JSON.parse(jsonData);
     const delUserId = req.body
-    console.log(delUserId);
-    console.log("Deleteing ,", delUserId);
     const index = allUsersData.findIndex(obj => obj.id == delUserId.id);
     console.log(index);
-    if(index){
-        console.log("ENter")
+    if(index=!1){
         allUsersData.splice(index,1);
         saveUserData(allUsersData);
         res.send(allUsersData);
@@ -64,19 +59,31 @@ module.exports.updateUser =  (req,res)=>{
     const updateUserId = req.body
     console.log(updateUserId);
     console.log("Update,", updateUserId);
-    const index = allUsersData.findIndex(obj => obj.id == updateUserId.id);
-    if(index){
-        const singleUser = (allUsersData[index]);
-        Object.keys(singleUser).forEach(key => {
-            if(updateUserId[key]){
-                singleUser[key] = updateUserId[key];
-            }
-           });
-        res.send(allUsersData);
-    }else{
-        res.send("Operation is not suceessfull. Maybe Id is not valid");
-    }
+    const response = updateUserDataInJson(allUsersData,updateUserId)
+    res.send(response);
+    // const index = allUsersData.findIndex(obj => obj.id == updateUserId.id);
+    // if(index!=-1){
+    //     const singleUser = (allUsersData[index]);
+    //     Object.keys(singleUser).forEach(key => {
+    //         if(updateUserId[key]){
+    //             singleUser[key] = updateUserId[key];
+    //         }
+    //        });
+    //     res.send(allUsersData);
+    // }else{
+    //     res.send("Operation is not suceessfull. Maybe Id is not valid");
+    // }
         
+}
+
+module.exports.bulkUserUpdate = (req,res)=>{
+    const updatethisUser = req.body
+    const jsonData = fs.readFileSync('./users.json');
+    const allUsersData = JSON.parse(jsonData);
+    const updatedUsers = updatethisUser.map(person=>updateUserDataInJson(allUsersData,person));
+    console.log(updatedUsers);
+    res.send(updatedUsers);
+
 }
 
 module.exports.saveUser = (req,res)=>{
@@ -93,3 +100,20 @@ module.exports.saveUser = (req,res)=>{
 //     getAllUser,
 //     getASpecificUser,
 // }
+
+const updateUserDataInJson = (arr,newUser)=>{
+    const index = arr.findIndex(obj => obj.id == newUser.id);
+    if(index!=-1){
+        const singleUser = (arr[index]);
+        Object.keys(singleUser).forEach(key => {
+            if(newUser[key]){
+                singleUser[key] = newUser[key];
+            }
+           });
+        saveUserData(arr);
+        return arr;
+    }else{
+        return "Error in updating......\n.Please check id thats may not be valid";
+    }
+
+}
